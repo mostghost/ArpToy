@@ -4,8 +4,6 @@ import PyQt5.QtCore as qtc
 import PyQt5.QtMultimedia as qtm
 import sys
 
-from numpy import empty
-
 
 class MainWindow(qtw.QWidget):
     def __init__(self):
@@ -65,8 +63,6 @@ class MainWindow(qtw.QWidget):
         self.lst_chord.addItem("Major 7th")
         self.lst_pattern.addItem("Up/Down")
 
-
-
         # Top right - Stepper
 
         # Bottom - Keyboard
@@ -123,12 +119,6 @@ class MainWindow(qtw.QWidget):
         self.lo_keyboard.addWidget(empty_buttons[0], 0, 5, 1, 2)
         self.lo_keyboard.addWidget(empty_buttons[1], 0, 13, 1, 2)
         self.lo_keyboard.addWidget(empty_buttons[2], 0, 19, 1, 2)
-
-    def on_update(self, is_checked):
-        if is_checked:
-            self.label_a.setText("Button A is ON")
-        else:
-            self.label_a.setText("Button A is OFF")
 
 
 if __name__ == "__main__":
