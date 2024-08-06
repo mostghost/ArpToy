@@ -104,9 +104,6 @@ class MainWindow(qtw.QWidget):
         self.lst_chord = qtw.QComboBox()
         lo_panel.addWidget(self.lst_chord)
 
-        btn_latch = qtw.QPushButton("Latch", checkable=True)
-        lo_panel.addWidget(btn_latch)
-
         struct_oct_btns = qtw.QWidget()
         lo_oct_btns = qtw.QHBoxLayout()
         struct_oct_btns.setLayout(lo_oct_btns)
@@ -140,8 +137,10 @@ class MainWindow(qtw.QWidget):
             lo_arp_steps.addWidget(self.dict_gates[i], 4, i, 1, 1)
 
         btn_arp_enable = qtw.QPushButton("On/Off", checkable=True)
-        btn_arp_enable.setChecked(True)
         lo_arp_controls.addWidget(btn_arp_enable)
+
+        btn_latch = qtw.QPushButton("Latch", checkable=True)
+        lo_arp_controls.addWidget(btn_latch)
 
         self.lst_presets = qtw.QComboBox()
         lo_arp_controls.addWidget(self.lst_presets)
@@ -149,8 +148,11 @@ class MainWindow(qtw.QWidget):
         self.lst_pattern = qtw.QComboBox()
         lo_arp_controls.addWidget(self.lst_pattern)
 
-        self.lst_note_type = qtw.QComboBox()
-        lo_arp_controls.addWidget(self.lst_note_type)
+        self.lst_speed_note = qtw.QComboBox()
+        lo_arp_controls.addWidget(self.lst_speed_note)
+
+        self.lst_speed_note_type = qtw.QComboBox()
+        lo_arp_controls.addWidget(self.lst_speed_note_type)
 
         spn_steps = qtw.QSpinBox(prefix="Steps: ", maximum=16, minimum=4, value=8)
         lo_arp_controls.addWidget(spn_steps)
@@ -248,10 +250,16 @@ class MainWindow(qtw.QWidget):
         self.lst_instrument.addItem("Wurlitzer", "wurl")
         self.lst_chord.addItem("Major 7th")
         self.lst_pattern.addItem("Up/Down")
-        self.lst_presets.addItem("Default")
-        self.lst_note_type.addItem("Whole")
-        self.lst_note_type.addItem("Dotted")
-        self.lst_note_type.addItem("Triplet")
+        self.lst_presets.addItem("No Preset")
+        self.lst_speed_note.addItem("1/1")
+        self.lst_speed_note.addItem("1/2")
+        self.lst_speed_note.addItem("1/4")
+        self.lst_speed_note.addItem("1/8")
+        self.lst_speed_note.addItem("1/16")
+        self.lst_speed_note.addItem("1/32")
+        self.lst_speed_note_type.addItem("Whole")
+        self.lst_speed_note_type.addItem("Dotted")
+        self.lst_speed_note_type.addItem("Triplet")
 
         self.lst_instrument.currentIndexChanged.connect(self.changeInstrument)
         self.btn_oct_up.clicked.connect(lambda _: self.changeOctave("up"))
