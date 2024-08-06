@@ -11,23 +11,16 @@ class LedIndicator(QAbstractButton):
 
         self.setMinimumSize(24, 24)
         self.setCheckable(False)
-        self.state = 1
-        # State 1 = Active
-        # State 2 = On but not active
-        # State 3 = Off
+        self.power_state = True
 
         # Green
-        self.active_color_1 = QColor('#851f99')
-        self.active_color_2 = QColor('#520075')
-        self.on_color_1 = QColor('17174d')
-        self.on_color_2 = QColor('#2b003d')
-        self.off_color_1 = QColor('#2c3034')
-        self.off_color_2 = QColor('#454545')
+        self.on_color_1 = QColor("#851f99")
+        self.on_color_2 = QColor("#520075")
+        self.off_color_1 = QColor("17174d")
+        self.off_color_2 = QColor("#2b003d")
 
-        self.rim_color_1 = QColor('#2c3034')
-        self.rim_color_2 = QColor('#454545')
-
-
+        self.rim_color_1 = QColor("#2c3034")
+        self.rim_color_2 = QColor("#454545")
 
     def resizeEvent(self, QResizeEvent):
         self.update()
@@ -58,21 +51,26 @@ class LedIndicator(QAbstractButton):
         painter.drawEllipse(QPointF(0, 0), 450, 450)
 
         painter.setPen(pen)
-        if self.state == 1:
-            gradient = QRadialGradient(QPointF(-500, -500), 1500, QPointF(-500, -500))
-            gradient.setColorAt(0, self.active_color_1)
-            gradient.setColorAt(1, self.active_color_2)
-        elif self.state == 2:
+        if self.power_state is True:
             gradient = QRadialGradient(QPointF(-500, -500), 1500, QPointF(-500, -500))
             gradient.setColorAt(0, self.on_color_1)
             gradient.setColorAt(1, self.on_color_2)
-        elif self.state == 3:
+        else:
             gradient = QRadialGradient(QPointF(500, 500), 1500, QPointF(500, 500))
             gradient.setColorAt(0, self.off_color_1)
             gradient.setColorAt(1, self.off_color_2)
 
         painter.setBrush(gradient)
         painter.drawEllipse(QPointF(0, 0), 400, 400)
+
+    def toggle(self, value=None):
+        if type(value) != bool:
+            print(value)
+            self.power_state = value
+        else:
+            self.power_state = not self.power_state
+
+        self.repaint()
 
     @pyqtProperty(QColor)
     def onColor1(self):

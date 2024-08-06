@@ -2632,6 +2632,7 @@ QPushButton#PianoKey:pressed
     padding-left: 1em;
     padding-right: 1em;
     border: 0.1em solid #3e2680;
+    background-color: #b0b0b0  ;
 }
 
 
@@ -2655,6 +2656,8 @@ QPushButton#PianoSharp:pressed
     padding-left: 1em;
     padding-right: 1em;
     border: 0.1em solid #3e2680;
+    background-color: #17174d  ;
+
 }
 
 QPushButton#Invisible{

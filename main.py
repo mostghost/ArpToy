@@ -4,7 +4,8 @@ import PyQt5.QtCore as qtc
 import PyQt5.QtMultimedia as qtm
 import sys
 from src.led import LedIndicator
-from src.globals import *
+from src.globals import NOTES_INDEX, INDEX_NOTES, NOTES
+from src.keyslide import KeySlide
 
 
 class MainWindow(qtw.QWidget):
@@ -161,10 +162,10 @@ class MainWindow(qtw.QWidget):
     def setupKeyboardButtons(self):
         self.dict_keyboard.clear()
 
-        for i in range(1, 5):  # We fill up with 2 octaves at a time
+        for i in range(1, 6):
             for n in NOTES:
                 note = f"{n}{i}"
-                self.dict_keyboard[note] = qtw.QPushButton(note.replace("s", "#")[:-1])
+                self.dict_keyboard[note] = KeySlide(note.replace("s", "#")[:-1])
                 self.dict_keyboard[note].setSizePolicy(
                     qtw.QSizePolicy.Preferred, qtw.QSizePolicy.Expanding
                 )
@@ -173,8 +174,12 @@ class MainWindow(qtw.QWidget):
                 else:
                     self.dict_keyboard[note].setObjectName("PianoKey")
 
-                self.dict_keyboard[note].clicked.connect(
-                    lambda _, note=note: self.playNote(note)
+                self.dict_keyboard[note].pressed.connect(
+                    lambda note=note: self.playNote(note)
+                )
+
+                self.dict_keyboard[note].released.connect(
+                    lambda note=note: self.releaseNote(note)
                 )
 
     def setupKeyboard(self):
@@ -227,22 +232,36 @@ class MainWindow(qtw.QWidget):
                 )
 
     def playNote(self, note):
+        print(note)
         self.dict_sounds[note].play()
         index = NOTES_INDEX[note]
 
-        one = INDEX_NOTES[index + 12]
+        one = INDEX_NOTES[index + 3]
+        two = INDEX_NOTES[index + 6]
+        three = INDEX_NOTES[index + 9]
+
         self.dict_sounds[one].play()
-
-        two = INDEX_NOTES[index + 7]
+        self.dict_keyboard[one].setDown(True)
         self.dict_sounds[two].play()
-
-        three = INDEX_NOTES[index -12]
+        self.dict_keyboard[two].setDown(True)
         self.dict_sounds[three].play()
+        self.dict_keyboard[three].setDown(True)
 
         print(note)
-        print(one)
-        print(two)
         print(three)
+
+    def releaseNote(self, note):
+        index = NOTES_INDEX[note]
+
+        one = INDEX_NOTES[index + 3]
+
+        two = INDEX_NOTES[index + 6]
+
+        three = INDEX_NOTES[index + 9]
+
+        self.dict_keyboard[one].setDown(False)
+        self.dict_keyboard[two].setDown(False)
+        self.dict_keyboard[three].setDown(False)
 
     def connectPanel(self):
         self.lst_instrument.addItem("Piano", "piano")
@@ -312,10 +331,7 @@ class MainWindow(qtw.QWidget):
             self.dict_gates[i].hide()
 
     def temp_toggleState(self, led):
-        led.state += 1
-
-        if led.state >= 4:
-            led.state = 1
+        led.toggle(False)
 
 
 if __name__ == "__main__":
