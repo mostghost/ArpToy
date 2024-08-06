@@ -2688,3 +2688,28 @@ QFrame#FullFrame {
     border: 0.3em solid #3e2680;
     border-radius: 1em;
 }
+
+/*     background: #3e2680;
+*/
+
+QSlider#Pitch::add-page:vertical
+{
+    background: #2c3034;
+}
+QSlider#Pitch::sub-page:vertical
+{
+    background: #2c3034;
+}
+
+
+QSlider#Pitch::handle:vertical
+{
+    background: #2b003d;
+    border: 0.04em solid #520075;
+}
+
+QSlider#Pitch::handle:vertical:hover
+{
+    border: 0.04em solid #520075;
+    background: #520075;
+}

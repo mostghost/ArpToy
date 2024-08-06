@@ -1,18 +1,26 @@
-from re import L
 import PyQt5.QtWidgets as qtw
 import PyQt5.QtGui as qtg
 import PyQt5.QtCore as qtc
 import PyQt5.QtMultimedia as qtm
 import sys
 from src.led import LedIndicator
+from src.globals import *
 
 
 class MainWindow(qtw.QWidget):
+
+    dict_led = {}
+    dict_pitch = {}
+    dict_gates = {}
+
+    dict_keyboard = {}
+    dict_sounds = {}
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Arp Toy")
 
-        self.setMinimumSize(1000, 700)
+        self.setMinimumSize(1000, 750)
 
         self.setupPanelUI()
 
@@ -21,76 +29,61 @@ class MainWindow(qtw.QWidget):
         self.setupKeyboard()
         self.setupKeyboardSounds("piano")
 
+        self.changeSteps(8)
+
         self.connectPanel()
 
     def setupPanelUI(self):
         lo_master = qtw.QVBoxLayout()
-        self.setLayout(lo_master)
-        lo_top = qtw.QHBoxLayout()
-        struct_top = qtw.QFrame()
-        struct_top.setObjectName("LShapeFrame")
-        struct_top.setLayout(lo_top)
-
-        lo_top_holder = qtw.QHBoxLayout()
-        struct_top_holder = qtw.QWidget()
-        struct_top_holder.setLayout(lo_top_holder)
-
-        spacer1 = qtw.QSpacerItem(20, 40, qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Minimum)
-
-        lo_top_holder.addWidget(struct_top)
-        lo_top_holder.addSpacerItem(spacer1)
-
-        self.lo_keyboard = qtw.QGridLayout()
+        struct_frame = qtw.QFrame()
+        struct_north_holder = qtw.QWidget()
+        struct_north = qtw.QWidget()
         struct_keyboard = qtw.QWidget()
-        struct_keyboard.setLayout(self.lo_keyboard)
-        lo_master.addWidget(struct_top_holder)
-        lo_master.addWidget(struct_keyboard)
-
-        lo_panel = qtw.QGridLayout()
-        lo_stepper_top = qtw.QVBoxLayout()
-        lo_stepper = qtw.QGridLayout()
-        lo_step_dials = qtw.QHBoxLayout()
-
-        struct_panel = qtw.QWidget()
-        struct_stepper_top = qtw.QFrame()
-        struct_stepper_top.setObjectName("LeftI")
-        struct_stepper = qtw.QWidget()
-        struct_step_dials = qtw.QWidget()
-
-        struct_panel.setLayout(lo_panel)
-        struct_stepper_top.setLayout(lo_stepper_top)
-        struct_stepper.setLayout(lo_stepper)
-        struct_step_dials.setLayout(lo_step_dials)
-
-        lo_stepper_top.addWidget(struct_step_dials)
-        lo_stepper_top.addWidget(struct_stepper)
-
-        lo_panel_holder = qtw.QVBoxLayout()
+        struct_northwest_panel = qtw.QWidget()
+        struct_arp_holder = qtw.QFrame()
+        struct_arp_steps = qtw.QWidget()
+        struct_step_controls = qtw.QWidget()
         struct_panel_holder = qtw.QWidget()
+
+        struct_frame.setObjectName("LShapeFrame")
+        struct_arp_holder.setObjectName("LeftI")
+
+        lo_frame = qtw.QHBoxLayout()
+        lo_north = qtw.QHBoxLayout()
+        lo_panel_holder = qtw.QVBoxLayout()
+        lo_north_holder = qtw.QVBoxLayout()
+        self.lo_keyboard = qtw.QGridLayout()
+        lo_panel = qtw.QVBoxLayout()
+        lo_arp_holder = qtw.QVBoxLayout()
+        lo_arp_steps = qtw.QGridLayout()
+        lo_arp_controls = qtw.QHBoxLayout()
+
+        self.setLayout(lo_master)
+        struct_north.setLayout(lo_north)
+        struct_north_holder.setLayout(lo_north_holder)
+        struct_keyboard.setLayout(self.lo_keyboard)
+        struct_frame.setLayout(lo_frame)
+        struct_northwest_panel.setLayout(lo_panel)
         struct_panel_holder.setLayout(lo_panel_holder)
+        struct_arp_holder.setLayout(lo_arp_holder)
+        struct_step_controls.setLayout(lo_arp_controls)
+        struct_arp_steps.setLayout(lo_arp_steps)
 
-        spacer2 = qtw.QSpacerItem(20, 40, qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Minimum)
-        lo_panel_holder.addSpacerItem(spacer2)
-        lo_panel_holder.addWidget(struct_panel)
+        north_spacer = qtw.QSpacerItem(
+            20, 20, qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Expanding
+        )
 
-        spacer3 = qtw.QSpacerItem(20, 40, qtw.QSizePolicy.Expanding, qtw.QSizePolicy.Minimum)
+        lo_north_holder.addSpacerItem(north_spacer)
+        lo_frame.addWidget(struct_north_holder)
+        lo_master.addWidget(struct_frame)
+        lo_master.addWidget(struct_keyboard)
+        lo_arp_holder.addWidget(struct_step_controls)
+        lo_arp_holder.addWidget(struct_arp_steps)
+        lo_north.addWidget(struct_panel_holder, stretch=2)
+        lo_north.addWidget(struct_arp_holder, stretch=4)
+        lo_north_holder.addWidget(struct_north)
 
-        lo_top.addWidget(struct_panel_holder)
-        lo_top.addSpacerItem(spacer3)
-        lo_top.addWidget(struct_stepper_top)
-
-        # Top left - Buttons
-
-        lbl_logo = qtw.QLabel("Arp<br>Toy")
-        lo_panel.addWidget(lbl_logo, 0, 0, 3, 1)
-        self.lst_instrument = qtw.QComboBox()
-        lo_panel.addWidget(self.lst_instrument, 0, 3, 1, 2)
-        self.lst_chord = qtw.QComboBox()
-        lo_panel.addWidget(self.lst_chord, 1, 3, 1, 2)
-        self.btn_oct_down = qtw.QPushButton("Octave -")
-        lo_panel.addWidget(self.btn_oct_down, 2, 3, 1, 1)
-        self.btn_oct_up = qtw.QPushButton("Octave +")
-        lo_panel.addWidget(self.btn_oct_up, 2, 4, 1, 1)
+        # Top left - Panel
 
         struct_bpm_frame = qtw.QFrame()
         struct_bpm_frame.setObjectName("FullFrame")
@@ -104,79 +97,111 @@ class MainWindow(qtw.QWidget):
         self.btn_tap = qtw.QPushButton("Tap Tempo")
         lo_bpm_frame.addWidget(self.btn_tap)
 
-        lo_panel.addWidget(struct_bpm_frame, 0, 6, 3, 1)
+        lo_panel_holder.addWidget(struct_bpm_frame)
 
+        self.lst_instrument = qtw.QComboBox()
+        lo_panel.addWidget(self.lst_instrument)
+        self.lst_chord = qtw.QComboBox()
+        lo_panel.addWidget(self.lst_chord)
 
+        btn_latch = qtw.QPushButton("Latch", checkable=True)
+        lo_panel.addWidget(btn_latch)
 
-        # Top right - Stepper
-        lbl_gate1 = qtw.QLabel("G<br>a<br>t<br>e<br><br>L<br>e<br>n")
-        lo_stepper.addWidget(lbl_gate1, 3, 0, 2, 1)
+        struct_oct_btns = qtw.QWidget()
+        lo_oct_btns = qtw.QHBoxLayout()
+        struct_oct_btns.setLayout(lo_oct_btns)
+        self.btn_oct_down = qtw.QPushButton("Octave -")
+        lo_oct_btns.addWidget(self.btn_oct_down)
+        self.btn_oct_up = qtw.QPushButton("Octave +")
+        lo_oct_btns.addWidget(self.btn_oct_up)
+        lo_panel.addWidget(struct_oct_btns)
 
-        dict_gates = {}
+        lo_panel_holder.addWidget(struct_northwest_panel)
+
+        # Top right - ARP
+
         for i in range(16):
-            dict_gates[i] = qtw.QSlider(maximum=100, minimum=0, value=100)
-            lo_stepper.addWidget(dict_gates[i], 3, i + 1, 2, 1)
+            self.dict_led[i] = LedIndicator()
+            lo_arp_steps.addWidget(self.dict_led[i], 2, i, 1, 1)
+            self.dict_led[i].clicked.connect(
+                lambda _, led=self.dict_led[i]: self.temp_toggleState(led)
+            )
 
-        dict_led = {}
         for i in range(16):
-            dict_led[i] = LedIndicator()
-            lo_stepper.addWidget(dict_led[i], 2, i + 1, 1, 1)
-            dict_led[i].clicked.connect(lambda _, led=dict_led[i]: self.temp_toggleState(led))
+            self.dict_pitch[i] = qtw.QSlider(maximum=12, minimum=-12, value=0)
+            self.dict_pitch[i].setObjectName("Pitch")
+            lo_arp_steps.addWidget(self.dict_pitch[i], 3, i, 1, 1)
+            self.dict_pitch[i].sliderReleased.connect(
+                lambda pitch=self.dict_pitch[i]: print(pitch.value())
+            )
+
+        for i in range(16):
+            self.dict_gates[i] = qtw.QSlider(maximum=100, minimum=0, value=100)
+            lo_arp_steps.addWidget(self.dict_gates[i], 4, i, 1, 1)
+
+        btn_arp_enable = qtw.QPushButton("On/Off", checkable=True)
+        btn_arp_enable.setChecked(True)
+        lo_arp_controls.addWidget(btn_arp_enable)
+
+        self.lst_presets = qtw.QComboBox()
+        lo_arp_controls.addWidget(self.lst_presets)
 
         self.lst_pattern = qtw.QComboBox()
-        lo_step_dials.addWidget(self.lst_pattern)
+        lo_arp_controls.addWidget(self.lst_pattern)
 
-        spn_steps = qtw.QSpinBox(prefix='Steps: ', maximum=16, minimum=4, value=8)
-        lo_step_dials.addWidget(spn_steps)
+        self.lst_note_type = qtw.QComboBox()
+        lo_arp_controls.addWidget(self.lst_note_type)
 
-
+        spn_steps = qtw.QSpinBox(prefix="Steps: ", maximum=16, minimum=4, value=8)
+        lo_arp_controls.addWidget(spn_steps)
+        spn_steps.valueChanged.connect(self.changeSteps)
 
     def setupKeyboardButtons(self):
-        self.keyboard_dict = {}
-        self.notes = ["A", "As", "B", "C", "Cs", "D", "Ds", "E", "F", "Fs", "G", "Gs"]
+        self.dict_keyboard.clear()
+
         for i in range(1, 5):  # We fill up with 2 octaves at a time
-            for n in self.notes:
+            for n in NOTES:
                 note = f"{n}{i}"
-                self.keyboard_dict[note] = qtw.QPushButton(note.replace("s", "#")[:-1])
-                self.keyboard_dict[note].setSizePolicy(
+                self.dict_keyboard[note] = qtw.QPushButton(note.replace("s", "#")[:-1])
+                self.dict_keyboard[note].setSizePolicy(
                     qtw.QSizePolicy.Preferred, qtw.QSizePolicy.Expanding
                 )
                 if "s" in note:
-                    self.keyboard_dict[note].setObjectName("PianoSharp")
+                    self.dict_keyboard[note].setObjectName("PianoSharp")
                 else:
-                    self.keyboard_dict[note].setObjectName("PianoKey")
+                    self.dict_keyboard[note].setObjectName("PianoKey")
 
-                self.keyboard_dict[note].clicked.connect(
+                self.dict_keyboard[note].clicked.connect(
                     lambda _, note=note: self.playNote(note)
                 )
 
     def setupKeyboard(self):
         oct = self.octave
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"C{oct}"], 1, 0, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"Cs{oct}"], 0, 1, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"D{oct}"], 1, 2, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"Ds{oct}"], 0, 3, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"E{oct}"], 1, 4, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"F{oct}"], 1, 6, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"Fs{oct}"], 0, 7, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"G{oct}"], 1, 8, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"Gs{oct}"], 0, 9, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"A{oct}"], 1, 10, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"As{oct}"], 0, 11, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"B{oct}"], 1, 12, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"C{oct}"], 1, 0, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"Cs{oct}"], 0, 1, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"D{oct}"], 1, 2, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"Ds{oct}"], 0, 3, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"E{oct}"], 1, 4, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"F{oct}"], 1, 6, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"Fs{oct}"], 0, 7, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"G{oct}"], 1, 8, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"Gs{oct}"], 0, 9, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"A{oct}"], 1, 10, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"As{oct}"], 0, 11, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"B{oct}"], 1, 12, 1, 2)
 
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"C{oct+1}"], 1, 14, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"Cs{oct+1}"], 0, 15, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"D{oct+1}"], 1, 16, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"Ds{oct+1}"], 0, 17, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"E{oct+1}"], 1, 18, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"F{oct+1}"], 1, 20, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"Fs{oct+1}"], 0, 21, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"G{oct+1}"], 1, 22, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"Gs{oct+1}"], 0, 23, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"A{oct+1}"], 1, 24, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"As{oct+1}"], 0, 25, 1, 2)
-        self.lo_keyboard.addWidget(self.keyboard_dict[f"B{oct+1}"], 1, 26, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"C{oct+1}"], 1, 14, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"Cs{oct+1}"], 0, 15, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"D{oct+1}"], 1, 16, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"Ds{oct+1}"], 0, 17, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"E{oct+1}"], 1, 18, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"F{oct+1}"], 1, 20, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"Fs{oct+1}"], 0, 21, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"G{oct+1}"], 1, 22, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"Gs{oct+1}"], 0, 23, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"A{oct+1}"], 1, 24, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"As{oct+1}"], 0, 25, 1, 2)
+        self.lo_keyboard.addWidget(self.dict_keyboard[f"B{oct+1}"], 1, 26, 1, 2)
 
         # We'll just fill out the extra spots with invisible buttons
         # to make sure it all aligns.
@@ -190,17 +215,32 @@ class MainWindow(qtw.QWidget):
         self.lo_keyboard.addWidget(empty_buttons[2], 0, 19, 1, 2)
 
     def setupKeyboardSounds(self, instrument):
-        self.sounds_dict = {}
+        self.dict_sounds.clear()
         for i in range(1, 5):
-            for n in self.notes:
+            for n in NOTES:
                 note = f"{n}{i}"
-                self.sounds_dict[note] = qtm.QSoundEffect()
-                self.sounds_dict[note].setSource(
+                self.dict_sounds[note] = qtm.QSoundEffect()
+                self.dict_sounds[note].setSource(
                     qtc.QUrl.fromLocalFile(f"sound/{instrument}/{note}.wav")
                 )
 
     def playNote(self, note):
-        self.sounds_dict[note].play()
+        self.dict_sounds[note].play()
+        index = NOTES_INDEX[note]
+
+        one = INDEX_NOTES[index + 12]
+        self.dict_sounds[one].play()
+
+        two = INDEX_NOTES[index + 7]
+        self.dict_sounds[two].play()
+
+        three = INDEX_NOTES[index -12]
+        self.dict_sounds[three].play()
+
+        print(note)
+        print(one)
+        print(two)
+        print(three)
 
     def connectPanel(self):
         self.lst_instrument.addItem("Piano", "piano")
@@ -208,6 +248,10 @@ class MainWindow(qtw.QWidget):
         self.lst_instrument.addItem("Wurlitzer", "wurl")
         self.lst_chord.addItem("Major 7th")
         self.lst_pattern.addItem("Up/Down")
+        self.lst_presets.addItem("Default")
+        self.lst_note_type.addItem("Whole")
+        self.lst_note_type.addItem("Dotted")
+        self.lst_note_type.addItem("Triplet")
 
         self.lst_instrument.currentIndexChanged.connect(self.changeInstrument)
         self.btn_oct_up.clicked.connect(lambda _: self.changeOctave("up"))
@@ -246,7 +290,18 @@ class MainWindow(qtw.QWidget):
             else:
                 self.lo_keyboard.removeItem(item)
 
-        self.keyboard_dict = {}
+        self.dict_keyboard.clear()
+
+    def changeSteps(self, num_of_steps):
+        for i in range(16):
+            self.dict_led[i].show()
+            self.dict_pitch[i].show()
+            self.dict_gates[i].show()
+
+        for i in range(15, num_of_steps - 1, -1):
+            self.dict_led[i].hide()
+            self.dict_pitch[i].hide()
+            self.dict_gates[i].hide()
 
     def temp_toggleState(self, led):
         led.state += 1
