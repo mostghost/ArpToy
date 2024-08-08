@@ -6,13 +6,15 @@ import sys
 from src.led import LedIndicator
 from src.globals import NOTES_INDEX, INDEX_NOTES, NOTES
 from src.keyslide import KeySlide
+from src.mutex import MutexDict
 
 
 class MainWindow(qtw.QWidget):
 
-    dict_led = {}
-    dict_pitch = {}
-    dict_gates = {}
+    shared_led = {}
+    mutex_pitch = MutexDict()
+    mutex_gates = MutexDict()
+    mutex_common = MutexDict()
 
     dict_keyboard = {}
     dict_sounds = {}
@@ -33,6 +35,15 @@ class MainWindow(qtw.QWidget):
         self.changeSteps(8)
 
         self.connectPanel()
+
+        self.lst_n_type.setCurrentIndex(2)
+
+        self.arp = ArpStepper(
+            self.shared_led,
+            self.mutex_pitch,
+            self.mutex_gates,
+            self.mutex_common,
+        )
 
     def setupPanelUI(self):
         lo_master = qtw.QVBoxLayout()
@@ -95,6 +106,7 @@ class MainWindow(qtw.QWidget):
         lo_bpm_frame.addWidget(lbl_bpm)
         self.spn_bpm = qtw.QSpinBox(maximum=260, minimum=40, value=110)
         lo_bpm_frame.addWidget(self.spn_bpm)
+        self.spn_bpm.valueChanged.connect(self.changeBPM)
         self.btn_tap = qtw.QPushButton("Tap Tempo")
         lo_bpm_frame.addWidget(self.btn_tap)
 
@@ -104,6 +116,9 @@ class MainWindow(qtw.QWidget):
         lo_panel.addWidget(self.lst_instrument)
         self.lst_chord = qtw.QComboBox()
         lo_panel.addWidget(self.lst_chord)
+        self.lst_control_type = qtw.QComboBox()
+        lo_panel.addWidget(self.lst_control_type)
+        self.lst_control_type.currentTextChanged.connect(self.changeKeyControl)
 
         struct_oct_btns = qtw.QWidget()
         lo_oct_btns = qtw.QHBoxLayout()
@@ -119,26 +134,27 @@ class MainWindow(qtw.QWidget):
         # Top right - ARP
 
         for i in range(16):
-            self.dict_led[i] = LedIndicator()
-            lo_arp_steps.addWidget(self.dict_led[i], 2, i, 1, 1)
-            self.dict_led[i].clicked.connect(
-                lambda _, led=self.dict_led[i]: self.temp_toggleState(led)
+            self.shared_led[i] = LedIndicator()
+            lo_arp_steps.addWidget(self.shared_led[i], 2, i, 1, 1)
+            self.shared_led[i].clicked.connect(
+                lambda _, led=self.shared_led[i]: self.temp_toggleState(led)
             )
 
         for i in range(16):
-            self.dict_pitch[i] = qtw.QSlider(maximum=12, minimum=-12, value=0)
-            self.dict_pitch[i].setObjectName("Pitch")
-            lo_arp_steps.addWidget(self.dict_pitch[i], 3, i, 1, 1)
-            self.dict_pitch[i].sliderReleased.connect(
-                lambda pitch=self.dict_pitch[i]: print(pitch.value())
+            self.mutex_pitch[i] = qtw.QSlider(maximum=12, minimum=-12, value=0)
+            self.mutex_pitch[i].setObjectName("Pitch")
+            lo_arp_steps.addWidget(self.mutex_pitch[i], 3, i, 1, 1)
+            self.mutex_pitch[i].sliderReleased.connect(
+                lambda pitch=self.mutex_pitch[i]: print(pitch.value())
             )
 
         for i in range(16):
-            self.dict_gates[i] = qtw.QSlider(maximum=100, minimum=0, value=100)
-            lo_arp_steps.addWidget(self.dict_gates[i], 4, i, 1, 1)
+            self.mutex_gates[i] = qtw.QSlider(maximum=100, minimum=0, value=100)
+            lo_arp_steps.addWidget(self.mutex_gates[i], 4, i, 1, 1)
 
-        btn_arp_enable = qtw.QPushButton("On/Off", checkable=True)
-        lo_arp_controls.addWidget(btn_arp_enable)
+        self.btn_arp_enable = qtw.QPushButton("Arp Off", checkable=True)
+        lo_arp_controls.addWidget(self.btn_arp_enable)
+        self.btn_arp_enable.clicked.connect(self.toggleArp)
 
         btn_latch = qtw.QPushButton("Latch", checkable=True)
         lo_arp_controls.addWidget(btn_latch)
@@ -149,15 +165,18 @@ class MainWindow(qtw.QWidget):
         self.lst_pattern = qtw.QComboBox()
         lo_arp_controls.addWidget(self.lst_pattern)
 
-        self.lst_speed_note = qtw.QComboBox()
-        lo_arp_controls.addWidget(self.lst_speed_note)
+        self.lst_n_type = qtw.QComboBox()
+        lo_arp_controls.addWidget(self.lst_n_type)
+        self.lst_n_type.currentIndexChanged.connect(self.changeNoteSpeed)
 
-        self.lst_speed_note_type = qtw.QComboBox()
-        lo_arp_controls.addWidget(self.lst_speed_note_type)
 
-        spn_steps = qtw.QSpinBox(prefix="Steps: ", maximum=16, minimum=4, value=8)
-        lo_arp_controls.addWidget(spn_steps)
-        spn_steps.valueChanged.connect(self.changeSteps)
+        self.lst_n_mod = qtw.QComboBox()
+        lo_arp_controls.addWidget(self.lst_n_mod)
+        self.lst_n_mod.currentIndexChanged.connect(self.changeNoteModifier)
+
+        self.spn_steps = qtw.QSpinBox(prefix="Steps: ", maximum=16, minimum=4, value=8)
+        lo_arp_controls.addWidget(self.spn_steps)
+        self.spn_steps.valueChanged.connect(self.changeSteps)
 
     def setupKeyboardButtons(self):
         self.dict_keyboard.clear()
@@ -270,15 +289,18 @@ class MainWindow(qtw.QWidget):
         self.lst_chord.addItem("Major 7th")
         self.lst_pattern.addItem("Up/Down")
         self.lst_presets.addItem("No Preset")
-        self.lst_speed_note.addItem("1/1")
-        self.lst_speed_note.addItem("1/2")
-        self.lst_speed_note.addItem("1/4")
-        self.lst_speed_note.addItem("1/8")
-        self.lst_speed_note.addItem("1/16")
-        self.lst_speed_note.addItem("1/32")
-        self.lst_speed_note_type.addItem("Whole")
-        self.lst_speed_note_type.addItem("Dotted")
-        self.lst_speed_note_type.addItem("Triplet")
+        self.lst_n_type.addItem("1/1", 4)
+        self.lst_n_type.addItem("1/2", 2)
+        self.lst_n_type.addItem("1/4", 1)
+        self.lst_n_type.addItem("1/8", 0.5)
+        self.lst_n_type.addItem("1/16", 0.25)
+        self.lst_n_type.addItem("1/32", 0.125)
+        self.lst_n_mod.addItem("Whole", 1)
+        self.lst_n_mod.addItem("Dotted", 1.5)
+        self.lst_n_mod.addItem("Triplet", 0.67)
+        self.lst_control_type.addItem("Click")
+        self.lst_control_type.addItem("Slide")
+        self.lst_control_type.addItem("Keybind")
 
         self.lst_instrument.currentIndexChanged.connect(self.changeInstrument)
         self.btn_oct_up.clicked.connect(lambda _: self.changeOctave("up"))
@@ -308,6 +330,9 @@ class MainWindow(qtw.QWidget):
         self.setupKeyboardButtons()
         self.setupKeyboard()
 
+        # Change the key control type
+        self.changeKeyControl(self.lst_control_type.currentText())
+
     def clearKeyboard(self):
         while self.lo_keyboard.count():
             item = self.lo_keyboard.takeAt(0)
@@ -321,17 +346,100 @@ class MainWindow(qtw.QWidget):
 
     def changeSteps(self, num_of_steps):
         for i in range(16):
-            self.dict_led[i].show()
-            self.dict_pitch[i].show()
-            self.dict_gates[i].show()
+            self.shared_led[i].show()
+            self.mutex_pitch[i].show()
+            self.mutex_gates[i].show()
 
         for i in range(15, num_of_steps - 1, -1):
-            self.dict_led[i].hide()
-            self.dict_pitch[i].hide()
-            self.dict_gates[i].hide()
+            self.shared_led[i].hide()
+            self.mutex_pitch[i].hide()
+            self.mutex_gates[i].hide()
+
+        self.mutex_common["steps"] = num_of_steps
+
+    def changeKeyControl(self, value):
+        for key in self.dict_keyboard.keys():
+            self.dict_keyboard[key].state = value
+
+    def changeBPM(self, value):
+        self.mutex_common["bpm"] = value
+
+    def toggleArp(self, value):
+        if value:
+            self.btn_arp_enable.setText("Arp On")
+            self.mutex_common["bpm"] = self.spn_bpm.value()
+            self.mutex_common["steps"] = self.spn_steps.value()
+            self.mutex_common["n_type"] = self.lst_n_type.currentData()
+            self.mutex_common["n_mod"] = self.lst_n_mod.currentData()
+
+
+            self.arp.powerOn()
+        else:
+            self.btn_arp_enable.setText("Arp Off")
+            self.arp.powerOff()
+
+    def changeNoteSpeed(self):
+        self.mutex_common['n_type'] = self.lst_n_type.currentData()
+
+    def changeNoteModifier(self):
+        self.mutex_common['n_mod'] = self.lst_n_mod.currentData()
+
 
     def temp_toggleState(self, led):
-        led.toggle(False)
+        pass
+
+
+class ArpStepper(qtc.QThread):
+
+    update_signal = qtc.pyqtSignal(bool)
+
+    def __init__(self, led, pitch, gates, common):
+        self.led = led
+        self.pitch = pitch
+        self.gates = gates
+        self.common = common
+        self.step_current = 0
+        self.step_last = 0
+        self.arpeggiate = False
+        super().__init__()
+
+    def run(self):
+        while self.arpeggiate:
+            start_time = qtc.QTime.currentTime()
+            beats = self.common["bpm"]
+            max_steps = self.common["steps"] - 1
+            n_type = self.common['n_type']
+            n_mod = self.common['n_mod']
+
+            self.led[self.step_last].setChecked(False)
+            self.led[self.step_current].setChecked(True)
+
+            self.step_last = self.step_current
+
+            if self.step_current < max_steps:
+                self.step_current += 1
+            else:
+                self.step_current = 0
+
+            elapsed = start_time.msecsTo(qtc.QTime.currentTime())
+            qtc.QThread.msleep(max(0, int((((60000 / beats) * n_type) * n_mod) - elapsed)))
+
+    def toggle(self):
+        self.go = not self.go
+
+    def powerOff(self):
+        self.arpeggiate = False
+
+    def powerOn(self):
+        self.step_current = 0
+        self.step_last = 0
+
+        for index in self.led.keys():
+            self.led[index].setChecked(False)
+
+        self.arpeggiate = True
+        self.start()
+
 
 
 if __name__ == "__main__":
