@@ -6,15 +6,14 @@ import sys
 from src.led import LedIndicator
 from src.globals import NOTES_INDEX, INDEX_NOTES, NOTES
 from src.keyslide import KeySlide
-from src.mutex import MutexDict
 
 
 class MainWindow(qtw.QWidget):
 
     shared_led = {}
-    mutex_pitch = MutexDict()
-    mutex_gates = MutexDict()
-    mutex_common = MutexDict()
+    shared_pitch = {}
+    shared_gates = {}
+    shared_common = {}
 
     dict_keyboard = {}
     dict_sounds = {}
@@ -40,9 +39,9 @@ class MainWindow(qtw.QWidget):
 
         self.arp = ArpStepper(
             self.shared_led,
-            self.mutex_pitch,
-            self.mutex_gates,
-            self.mutex_common,
+            self.shared_pitch,
+            self.shared_gates,
+            self.shared_common,
         )
 
     def setupPanelUI(self):
@@ -141,16 +140,20 @@ class MainWindow(qtw.QWidget):
             )
 
         for i in range(16):
-            self.mutex_pitch[i] = qtw.QSlider(maximum=12, minimum=-12, value=0)
-            self.mutex_pitch[i].setObjectName("Pitch")
-            lo_arp_steps.addWidget(self.mutex_pitch[i], 3, i, 1, 1)
-            self.mutex_pitch[i].sliderReleased.connect(
-                lambda pitch=self.mutex_pitch[i]: print(pitch.value())
+            self.shared_pitch[i] = qtw.QSlider(maximum=6, minimum=-6, value=0)
+            self.shared_pitch[i].setObjectName("CustomSlider")
+            self.shared_pitch[i].setOrientation(qtc.Qt.Horizontal)
+            lo_arp_steps.addWidget(self.shared_pitch[i], 3, i, 1, 1)
+            self.shared_pitch[i].sliderReleased.connect(
+                lambda pitch=self.shared_pitch[i]: print(pitch.value())
             )
 
         for i in range(16):
-            self.mutex_gates[i] = qtw.QSlider(maximum=100, minimum=0, value=100)
-            lo_arp_steps.addWidget(self.mutex_gates[i], 4, i, 1, 1)
+            self.shared_gates[i] = qtw.QSlider(maximum=100, minimum=0, value=100)
+            self.shared_gates[i].setObjectName("CustomSlider")
+            lo_arp_steps.addWidget(
+                self.shared_gates[i], 4, i, 1, 1, alignment=qtc.Qt.AlignCenter
+            )
 
         self.btn_arp_enable = qtw.QPushButton("Arp Off", checkable=True)
         lo_arp_controls.addWidget(self.btn_arp_enable)
@@ -168,7 +171,6 @@ class MainWindow(qtw.QWidget):
         self.lst_n_type = qtw.QComboBox()
         lo_arp_controls.addWidget(self.lst_n_type)
         self.lst_n_type.currentIndexChanged.connect(self.changeNoteSpeed)
-
 
         self.lst_n_mod = qtw.QComboBox()
         lo_arp_controls.addWidget(self.lst_n_mod)
@@ -347,43 +349,40 @@ class MainWindow(qtw.QWidget):
     def changeSteps(self, num_of_steps):
         for i in range(16):
             self.shared_led[i].show()
-            self.mutex_pitch[i].show()
-            self.mutex_gates[i].show()
+            self.shared_pitch[i].show()
+            self.shared_gates[i].show()
 
         for i in range(15, num_of_steps - 1, -1):
             self.shared_led[i].hide()
-            self.mutex_pitch[i].hide()
-            self.mutex_gates[i].hide()
+            self.shared_pitch[i].hide()
+            self.shared_gates[i].hide()
 
-        self.mutex_common["steps"] = num_of_steps
+        self.shared_common["steps"] = num_of_steps
 
     def changeKeyControl(self, value):
         for key in self.dict_keyboard.keys():
             self.dict_keyboard[key].state = value
 
     def changeBPM(self, value):
-        self.mutex_common["bpm"] = value
+        self.shared_common["bpm"] = value
 
     def toggleArp(self, value):
         if value:
             self.btn_arp_enable.setText("Arp On")
-            self.mutex_common["bpm"] = self.spn_bpm.value()
-            self.mutex_common["steps"] = self.spn_steps.value()
-            self.mutex_common["n_type"] = self.lst_n_type.currentData()
-            self.mutex_common["n_mod"] = self.lst_n_mod.currentData()
-
-
+            self.shared_common["bpm"] = self.spn_bpm.value()
+            self.shared_common["steps"] = self.spn_steps.value()
+            self.shared_common["n_type"] = self.lst_n_type.currentData()
+            self.shared_common["n_mod"] = self.lst_n_mod.currentData()
             self.arp.powerOn()
         else:
             self.btn_arp_enable.setText("Arp Off")
             self.arp.powerOff()
 
     def changeNoteSpeed(self):
-        self.mutex_common['n_type'] = self.lst_n_type.currentData()
+        self.shared_common["n_type"] = self.lst_n_type.currentData()
 
     def changeNoteModifier(self):
-        self.mutex_common['n_mod'] = self.lst_n_mod.currentData()
-
+        self.shared_common["n_mod"] = self.lst_n_mod.currentData()
 
     def temp_toggleState(self, led):
         pass
@@ -408,8 +407,8 @@ class ArpStepper(qtc.QThread):
             start_time = qtc.QTime.currentTime()
             beats = self.common["bpm"]
             max_steps = self.common["steps"] - 1
-            n_type = self.common['n_type']
-            n_mod = self.common['n_mod']
+            n_type = self.common["n_type"]
+            n_mod = self.common["n_mod"]
 
             self.led[self.step_last].setChecked(False)
             self.led[self.step_current].setChecked(True)
@@ -422,24 +421,23 @@ class ArpStepper(qtc.QThread):
                 self.step_current = 0
 
             elapsed = start_time.msecsTo(qtc.QTime.currentTime())
-            qtc.QThread.msleep(max(0, int((((60000 / beats) * n_type) * n_mod) - elapsed)))
+            qtc.QThread.msleep(
+                max(0, int((((60000 / beats) * n_type) * n_mod) - elapsed))
+            )
 
     def toggle(self):
         self.go = not self.go
 
     def powerOff(self):
         self.arpeggiate = False
+        for index in self.led.keys():
+            self.led[index].setChecked(False)
 
     def powerOn(self):
         self.step_current = 0
         self.step_last = 0
-
-        for index in self.led.keys():
-            self.led[index].setChecked(False)
-
         self.arpeggiate = True
         self.start()
-
 
 
 if __name__ == "__main__":

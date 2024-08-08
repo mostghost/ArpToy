@@ -1,5 +1,6 @@
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import *
 
 
@@ -14,10 +15,12 @@ class LedIndicator(QAbstractButton):
 
         # Green
         self.on_color_1 = QColor("#851f99")
-        self.on_color_2 = QColor("#520075")
-        self.off_color_1 = QColor("17174d")
+        self.on_color_2 = QColor("#872a99")
+        self.off_color_1 = QColor("#17174d")
         self.off_color_2 = QColor("#2b003d")
 
+        self.rim_color_1 = QColor(224, 224, 224)
+        self.rim_color_2 = QColor(28, 28, 28)
 
     def resizeEvent(self, QResizeEvent):
         self.update()
@@ -34,15 +37,15 @@ class LedIndicator(QAbstractButton):
         painter.scale(realSize / self.scaledSize, realSize / self.scaledSize)
 
         gradient = QRadialGradient(QPointF(-500, -500), 1500, QPointF(-500, -500))
-        gradient.setColorAt(0, QColor(224, 224, 224))
-        gradient.setColorAt(1, QColor(28, 28, 28))
+        gradient.setColorAt(0, self.rim_color_1)
+        gradient.setColorAt(1, self.rim_color_2)
         painter.setPen(pen)
         painter.setBrush(QBrush(gradient))
         painter.drawEllipse(QPointF(0, 0), 500, 500)
 
         gradient = QRadialGradient(QPointF(500, 500), 1500, QPointF(500, 500))
-        gradient.setColorAt(0, QColor(224, 224, 224))
-        gradient.setColorAt(1, QColor(28, 28, 28))
+        gradient.setColorAt(0, self.rim_color_1)
+        gradient.setColorAt(1, self.rim_color_2)
         painter.setPen(pen)
         painter.setBrush(QBrush(gradient))
         painter.drawEllipse(QPointF(0, 0), 450, 450)
@@ -59,6 +62,9 @@ class LedIndicator(QAbstractButton):
 
         painter.setBrush(gradient)
         painter.drawEllipse(QPointF(0, 0), 400, 400)
+
+    def mousePressEvent(self, event):
+        pass
 
     @pyqtProperty(QColor)
     def onColor1(self):

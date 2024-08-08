@@ -1979,8 +1979,8 @@ QTabBar::scroller { width: 1em; }
  QSlider::handle:horizontal,
  QSlider::handle:vertical
  {
-     background: #1d2023;
-     border: 0.04em solid #626568;
+    background: #851f99;
+    border: 0.2em solid #030201;
      width: 0.7em;
      height: 0.7em;
      border-radius: 0.35em;
@@ -1998,14 +1998,18 @@ QTabBar::scroller { width: 1em; }
  
  QSlider::handle:horizontal
  {
-     margin: -0.23em 0;
+     margin: -0.5em 0;
+     width: 0.4em;
  }
  
  QSlider::handle:vertical
  {
-     margin: 0 -0.23em;
+     margin: 0 -0.5em;
+     height: 0.4em;
  }
  
+
+
  QSlider::groove:horizontal,
  QSlider::groove:vertical
  {
@@ -2027,14 +2031,15 @@ QTabBar::scroller { width: 1em; }
  QSlider::handle:horizontal:hover,
  QSlider::handle:vertical:hover
  {
-     border: 0.04em solid #76797c;
-     background: #76797c;
+    border: 0.2em solid #030201;
+    background: #d4d8e0;
  }
  
+
  QSlider::handle:horizontal:!focus:!hover,
  QSlider::handle:vertical:!focus:!hover
  {
-     border: 0.04em solid #626568;
+     border: 0.1em solid #180022;
  }
  
  QSlider::sub-page:horizontal,
@@ -2047,7 +2052,7 @@ QTabBar::scroller { width: 1em; }
  QSlider::add-page:horizontal,
  QSlider::sub-page:vertical
  {
-     background: #1d2023;
+     background: #3e2680;
      border-radius: 0.19em;
  }
  
@@ -2692,27 +2697,15 @@ QFrame#FullFrame {
     border-radius: 1em;
 }
 
-/*     background: #3e2680;
-*/
 
-QSlider#Pitch::add-page:vertical
+
+QSlider#CustomSlider::handle
 {
-    background: #2c3034;
-}
-QSlider#Pitch::sub-page:vertical
-{
-    background: #2c3034;
+    background: #851f99;
+    border: 0.2em solid #030201;
 }
 
-
-QSlider#Pitch::handle:vertical
+QSlider#CustomSlider::handle:hover
 {
-    background: #2b003d;
-    border: 0.04em solid #520075;
-}
-
-QSlider#Pitch::handle:vertical:hover
-{
-    border: 0.04em solid #520075;
-    background: #520075;
+    background: #d4d8e0;
 }
