@@ -4,7 +4,7 @@ from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import *
 
 
-class LedIndicator(QAbstractButton):
+class ledIndicator(QAbstractButton):
     scaledSize = 1000.0
 
     def __init__(self, parent=None):

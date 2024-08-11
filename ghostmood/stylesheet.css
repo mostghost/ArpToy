@@ -977,8 +977,8 @@
  
  QPushButton:checked:hover
  {
-     background-color: #626568;
-     border: 0.04em solid #3e2680;
+    background-color: #3e2680;
+    border: 0.04em solid #3e2680;
      color: #d4d8e0;
  }
  
@@ -2625,18 +2625,13 @@ QPushButton#PianoKey {
     padding-left: 1em;
     padding-right: 1em;
 }
-QPushButton#PianoKey:flat,
-QPushButton#PianoKey:flat:hover
-{
-    border: 0.04em transparent #3b342e;
-}
 QPushButton#PianoKey:pressed
 {
     padding-bottom: 0px;
     padding-top: 9.5em;
     padding-left: 1em;
     padding-right: 1em;
-    border: 0.1em solid #3e2680;
+    border: 0.1em solid #b0b0b0;
     background-color: #b0b0b0  ;
 }
 
@@ -2660,9 +2655,35 @@ QPushButton#PianoSharp:pressed
     padding-top: 6.5em;
     padding-left: 1em;
     padding-right: 1em;
-    border: 0.1em solid #3e2680;
-    background-color: #17174d  ;
+    border: 0.1em solid #1d2023;
+    background-color: #1d2023  ;
+}
 
+QPushButton#PianoKey:checked
+{
+    background-color: #3e2680;
+    border: 0.04em solid #070018;
+    color: #d4d8e0;
+}
+
+QPushButton#PianoKey:checked:hover
+{
+   background-color: #3e2680;
+   border: 0.04em solid #3e2680;
+    color: #d4d8e0;
+}
+QPushButton#PianoSharp:checked
+{
+    background-color: #3e2680;
+    border: 0.04em solid #070018;
+    color: #d4d8e0;
+}
+
+QPushButton#PianoSharp:checked:hover
+{
+   background-color: #3e2680;
+   border: 0.04em solid #3e2680;
+    color: #d4d8e0;
 }
 
 QPushButton#Invisible{

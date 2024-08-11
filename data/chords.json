@@ -1,0 +1,12 @@
+{
+    "No Chord": [0],
+    "Major": [0,4,7,12,-5],
+    "Major 6th": [0,4,7,9],
+    "Major 7th": [0,4,7,10],
+    "Minor": [0,3,7,12],
+    "Minor 7th": [0,3,7,10],
+    "Minor 9th": [0,3,7,10,14],
+    "Octave Ensemble":[0,12,-12],
+    "Hard Power":[0,12,-12,7],
+    "Half-Diminished":[0,3,6,9]
+}

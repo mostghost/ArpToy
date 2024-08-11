@@ -1,3 +1,5 @@
+import json
+
 NOTES = ["C", "Cs", "D", "Ds", "E", "F", "Fs", "G", "Gs", "A", "As", "B"]
 
 INDEX_NOTES = {
@@ -101,3 +103,7 @@ NOTES_INDEX = {
     "As4": 47,
     "B4": 48,
 }
+
+with open('data/chords.json') as f:
+    CHORDS = json.load(f)
+

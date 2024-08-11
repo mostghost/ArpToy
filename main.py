@@ -2,21 +2,28 @@ import PyQt5.QtWidgets as qtw
 import PyQt5.QtGui as qtg
 import PyQt5.QtCore as qtc
 import PyQt5.QtMultimedia as qtm
+
+from data.globals import NOTES_INDEX, INDEX_NOTES, NOTES, CHORDS
+from widgets.led import ledIndicator
+from widgets.keyslide import keySlide
+from modules.sound_mod import soundObject
+from modules.arp_mod import arpObject
+
 import sys
-from src.led import LedIndicator
-from src.globals import NOTES_INDEX, INDEX_NOTES, NOTES
-from src.keyslide import KeySlide
+import json
 
 
 class MainWindow(qtw.QWidget):
 
-    shared_led = {}
-    shared_pitch = {}
-    shared_gates = {}
-    shared_common = {}
+    shared_LED = {}
+    shared_PITCH = {}
+    shared_GATES = {}
+    shared_COMMON = {}
+    shared_PLAYING = {}
 
     dict_keyboard = {}
-    dict_sounds = {}
+
+    soundscape = soundObject()
 
     def __init__(self):
         super().__init__()
@@ -24,27 +31,28 @@ class MainWindow(qtw.QWidget):
 
         self.setMinimumSize(1000, 750)
 
-        self.setupPanelUI()
+        self.setup_panel_ui()
 
         self.octave = 2
-        self.setupKeyboardButtons()
-        self.setupKeyboard()
-        self.setupKeyboardSounds("piano")
+        self.setup_key_btns()
+        self.setup_keyboard()
+        self.soundscape.setup_sounds("piano")
 
-        self.changeSteps(8)
+        self.change_steps(8)
 
-        self.connectPanel()
+        self.connect_panel()
 
         self.lst_n_type.setCurrentIndex(2)
 
-        self.arp = ArpStepper(
-            self.shared_led,
-            self.shared_pitch,
-            self.shared_gates,
-            self.shared_common,
+        self.arpstepper = arpObject(
+            self.shared_LED,
+            self.shared_PITCH,
+            self.shared_GATES,
+            self.shared_COMMON,
+            self.shared_PLAYING
         )
 
-    def setupPanelUI(self):
+    def setup_panel_ui(self):
         lo_master = qtw.QVBoxLayout()
         struct_frame = qtw.QFrame()
         struct_north_holder = qtw.QWidget()
@@ -105,7 +113,7 @@ class MainWindow(qtw.QWidget):
         lo_bpm_frame.addWidget(lbl_bpm)
         self.spn_bpm = qtw.QSpinBox(maximum=260, minimum=40, value=110)
         lo_bpm_frame.addWidget(self.spn_bpm)
-        self.spn_bpm.valueChanged.connect(self.changeBPM)
+        self.spn_bpm.valueChanged.connect(self.change_bpm)
         self.btn_tap = qtw.QPushButton("Tap Tempo")
         lo_bpm_frame.addWidget(self.btn_tap)
 
@@ -117,7 +125,7 @@ class MainWindow(qtw.QWidget):
         lo_panel.addWidget(self.lst_chord)
         self.lst_control_type = qtw.QComboBox()
         lo_panel.addWidget(self.lst_control_type)
-        self.lst_control_type.currentTextChanged.connect(self.changeKeyControl)
+        self.lst_control_type.currentTextChanged.connect(self.change_key_control)
 
         struct_oct_btns = qtw.QWidget()
         lo_oct_btns = qtw.QHBoxLayout()
@@ -133,34 +141,34 @@ class MainWindow(qtw.QWidget):
         # Top right - ARP
 
         for i in range(16):
-            self.shared_led[i] = LedIndicator()
-            lo_arp_steps.addWidget(self.shared_led[i], 2, i, 1, 1)
-            self.shared_led[i].clicked.connect(
-                lambda _, led=self.shared_led[i]: self.temp_toggleState(led)
+            self.shared_LED[i] = ledIndicator()
+            lo_arp_steps.addWidget(self.shared_LED[i], 2, i, 1, 1)
+            self.shared_LED[i].clicked.connect(
+                lambda _, led=self.shared_LED[i]: self.temp_toggleState(led)
             )
 
         for i in range(16):
-            self.shared_pitch[i] = qtw.QSlider(maximum=6, minimum=-6, value=0)
-            self.shared_pitch[i].setObjectName("CustomSlider")
-            self.shared_pitch[i].setOrientation(qtc.Qt.Horizontal)
-            lo_arp_steps.addWidget(self.shared_pitch[i], 3, i, 1, 1)
-            self.shared_pitch[i].sliderReleased.connect(
-                lambda pitch=self.shared_pitch[i]: print(pitch.value())
+            self.shared_PITCH[i] = qtw.QSlider(maximum=6, minimum=-6, value=0)
+            self.shared_PITCH[i].setObjectName("CustomSlider")
+            self.shared_PITCH[i].setOrientation(qtc.Qt.Horizontal)
+            lo_arp_steps.addWidget(self.shared_PITCH[i], 3, i, 1, 1)
+            self.shared_PITCH[i].sliderReleased.connect(
+                lambda pitch=self.shared_PITCH[i]: print(pitch.value())
             )
 
         for i in range(16):
-            self.shared_gates[i] = qtw.QSlider(maximum=100, minimum=0, value=100)
-            self.shared_gates[i].setObjectName("CustomSlider")
+            self.shared_GATES[i] = qtw.QSlider(maximum=100, minimum=0, value=100)
+            self.shared_GATES[i].setObjectName("CustomSlider")
             lo_arp_steps.addWidget(
-                self.shared_gates[i], 4, i, 1, 1, alignment=qtc.Qt.AlignCenter
+                self.shared_GATES[i], 4, i, 1, 1, alignment=qtc.Qt.AlignCenter
             )
 
         self.btn_arp_enable = qtw.QPushButton("Arp Off", checkable=True)
         lo_arp_controls.addWidget(self.btn_arp_enable)
-        self.btn_arp_enable.clicked.connect(self.toggleArp)
+        self.btn_arp_enable.clicked.connect(self.toggle_arp)
 
-        btn_latch = qtw.QPushButton("Latch", checkable=True)
-        lo_arp_controls.addWidget(btn_latch)
+        self.btn_latch = qtw.QPushButton("Latch", checkable=True)
+        lo_arp_controls.addWidget(self.btn_latch)
 
         self.lst_presets = qtw.QComboBox()
         lo_arp_controls.addWidget(self.lst_presets)
@@ -170,23 +178,23 @@ class MainWindow(qtw.QWidget):
 
         self.lst_n_type = qtw.QComboBox()
         lo_arp_controls.addWidget(self.lst_n_type)
-        self.lst_n_type.currentIndexChanged.connect(self.changeNoteSpeed)
+        self.lst_n_type.currentIndexChanged.connect(self.change_note_speed)
 
         self.lst_n_mod = qtw.QComboBox()
         lo_arp_controls.addWidget(self.lst_n_mod)
-        self.lst_n_mod.currentIndexChanged.connect(self.changeNoteModifier)
+        self.lst_n_mod.currentIndexChanged.connect(self.change_note_modifier)
 
         self.spn_steps = qtw.QSpinBox(prefix="Steps: ", maximum=16, minimum=4, value=8)
         lo_arp_controls.addWidget(self.spn_steps)
-        self.spn_steps.valueChanged.connect(self.changeSteps)
+        self.spn_steps.valueChanged.connect(self.change_steps)
 
-    def setupKeyboardButtons(self):
+    def setup_key_btns(self):
         self.dict_keyboard.clear()
 
         for i in range(1, 6):
             for n in NOTES:
                 note = f"{n}{i}"
-                self.dict_keyboard[note] = KeySlide(note.replace("s", "#")[:-1])
+                self.dict_keyboard[note] = keySlide(note.replace("s", "#")[:-1])
                 self.dict_keyboard[note].setSizePolicy(
                     qtw.QSizePolicy.Preferred, qtw.QSizePolicy.Expanding
                 )
@@ -196,14 +204,16 @@ class MainWindow(qtw.QWidget):
                     self.dict_keyboard[note].setObjectName("PianoKey")
 
                 self.dict_keyboard[note].pressed.connect(
-                    lambda note=note: self.playNote(note)
+                    lambda note=note: self.press_key(note)
                 )
 
                 self.dict_keyboard[note].released.connect(
-                    lambda note=note: self.releaseNote(note)
+                    lambda note=note: self.release_key(note)
                 )
 
-    def setupKeyboard(self):
+                self.dict_keyboard[note].setCheckable(True)
+
+    def setup_keyboard(self):
         oct = self.octave
         self.lo_keyboard.addWidget(self.dict_keyboard[f"C{oct}"], 1, 0, 1, 2)
         self.lo_keyboard.addWidget(self.dict_keyboard[f"Cs{oct}"], 0, 1, 1, 2)
@@ -242,53 +252,68 @@ class MainWindow(qtw.QWidget):
         self.lo_keyboard.addWidget(empty_buttons[1], 0, 13, 1, 2)
         self.lo_keyboard.addWidget(empty_buttons[2], 0, 19, 1, 2)
 
-    def setupKeyboardSounds(self, instrument):
-        self.dict_sounds.clear()
-        for i in range(1, 5):
-            for n in NOTES:
-                note = f"{n}{i}"
-                self.dict_sounds[note] = qtm.QSoundEffect()
-                self.dict_sounds[note].setSource(
-                    qtc.QUrl.fromLocalFile(f"sound/{instrument}/{note}.wav")
-                )
+    def press_key(self, note):
 
-    def playNote(self, note):
-        print(note)
-        self.dict_sounds[note].play()
-        index = NOTES_INDEX[note]
+        # If we're in latch mode...
+        if self.btn_latch.isChecked() is True:
+            # And we're already playing the key...
+            if note in self.shared_PLAYING.keys():
+                # Then turn off the key and break out.
+                self.dict_keyboard[note].setChecked(False)
+                del self.shared_PLAYING[note]
+                return
 
-        one = INDEX_NOTES[index + 3]
-        two = INDEX_NOTES[index + 6]
-        three = INDEX_NOTES[index + 9]
+        cascade = self.get_cascade_notes(note)
+        self.shared_PLAYING[note] = cascade
 
-        self.dict_sounds[one].play()
-        self.dict_keyboard[one].setDown(True)
-        self.dict_sounds[two].play()
-        self.dict_keyboard[two].setDown(True)
-        self.dict_sounds[three].play()
-        self.dict_keyboard[three].setDown(True)
+        flattened_cascade = [
+            element for sublist in self.shared_PLAYING.values() for element in sublist
+        ]
 
-        print(note)
-        print(three)
+        for cascade_key in flattened_cascade:
+            self.dict_keyboard[cascade_key].setDown(True)
 
-    def releaseNote(self, note):
-        index = NOTES_INDEX[note]
+        self.dict_keyboard[note].setChecked(True)
 
-        one = INDEX_NOTES[index + 3]
+        if self.btn_arp_enable.isChecked() is False:
+            self.soundscape.play_notes(flattened_cascade)
 
-        two = INDEX_NOTES[index + 6]
+    def release_key(self, note):
 
-        three = INDEX_NOTES[index + 9]
+        flattened_cascade = [
+            element for sublist in self.shared_PLAYING.values() for element in sublist
+        ]
 
-        self.dict_keyboard[one].setDown(False)
-        self.dict_keyboard[two].setDown(False)
-        self.dict_keyboard[three].setDown(False)
+        if self.btn_latch.isChecked() is True:
+            if note in self.shared_PLAYING.keys():
+                self.dict_keyboard[note].setChecked(True)
+            else:
+                self.dict_keyboard[note].setChecked(False)
 
-    def connectPanel(self):
+            # Clear keyboard
+            for key in self.dict_keyboard.values():
+                key.setDown(False)
+
+            # And reinit with still pressed keys:
+            for cascade_key in flattened_cascade:
+                self.dict_keyboard[cascade_key].setDown(True)
+
+        elif self.btn_latch.isChecked() is False:
+
+            for cascade_key in flattened_cascade:
+                self.dict_keyboard[cascade_key].setDown(False)
+
+            del self.shared_PLAYING[note]
+
+            self.dict_keyboard[note].setChecked(False)
+
+    def connect_panel(self):
         self.lst_instrument.addItem("Piano", "piano")
         self.lst_instrument.addItem("Clavinet", "clav")
         self.lst_instrument.addItem("Wurlitzer", "wurl")
-        self.lst_chord.addItem("Major 7th")
+        for chord in CHORDS.keys():
+            self.lst_chord.addItem(chord)
+
         self.lst_pattern.addItem("Up/Down")
         self.lst_presets.addItem("No Preset")
         self.lst_n_type.addItem("1/1", 4)
@@ -304,15 +329,15 @@ class MainWindow(qtw.QWidget):
         self.lst_control_type.addItem("Slide")
         self.lst_control_type.addItem("Keybind")
 
-        self.lst_instrument.currentIndexChanged.connect(self.changeInstrument)
-        self.btn_oct_up.clicked.connect(lambda _: self.changeOctave("up"))
-        self.btn_oct_down.clicked.connect(lambda _: self.changeOctave("down"))
+        self.lst_instrument.currentIndexChanged.connect(self.change_instrument)
+        self.btn_oct_up.clicked.connect(lambda _: self.change_octave("up"))
+        self.btn_oct_down.clicked.connect(lambda _: self.change_octave("down"))
 
-    def changeInstrument(self, x):
+    def change_instrument(self, x):
         instrument = self.lst_instrument.itemData(x)
-        self.setupKeyboardSounds(instrument)
+        self.soundscape.setup_sounds(instrument)
 
-    def changeOctave(self, direction):
+    def change_octave(self, direction):
         if direction == "up":
             self.octave += 1
         elif direction == "down":
@@ -328,14 +353,16 @@ class MainWindow(qtw.QWidget):
                 self.btn_oct_up.setDisabled(True)
 
         # Empty out the layout first:
-        self.clearKeyboard()
-        self.setupKeyboardButtons()
-        self.setupKeyboard()
+        self.clear_keyboard()
+        self.setup_key_btns()
+        self.setup_keyboard()
 
         # Change the key control type
-        self.changeKeyControl(self.lst_control_type.currentText())
+        self.change_key_control(self.lst_control_type.currentText())
 
-    def clearKeyboard(self):
+        self.shared_PLAYING.clear()
+
+    def clear_keyboard(self):
         while self.lo_keyboard.count():
             item = self.lo_keyboard.takeAt(0)
             widget = item.widget()
@@ -346,98 +373,57 @@ class MainWindow(qtw.QWidget):
 
         self.dict_keyboard.clear()
 
-    def changeSteps(self, num_of_steps):
+    def change_steps(self, num_of_steps):
         for i in range(16):
-            self.shared_led[i].show()
-            self.shared_pitch[i].show()
-            self.shared_gates[i].show()
+            self.shared_LED[i].show()
+            self.shared_PITCH[i].show()
+            self.shared_GATES[i].show()
 
         for i in range(15, num_of_steps - 1, -1):
-            self.shared_led[i].hide()
-            self.shared_pitch[i].hide()
-            self.shared_gates[i].hide()
+            self.shared_LED[i].hide()
+            self.shared_PITCH[i].hide()
+            self.shared_GATES[i].hide()
 
-        self.shared_common["steps"] = num_of_steps
+        self.shared_COMMON["steps"] = num_of_steps
 
-    def changeKeyControl(self, value):
+    def change_key_control(self, value):
         for key in self.dict_keyboard.keys():
-            self.dict_keyboard[key].state = value
+            self.dict_keyboard[key].type = value
 
-    def changeBPM(self, value):
-        self.shared_common["bpm"] = value
+    def change_bpm(self, value):
+        self.shared_COMMON["bpm"] = value
 
-    def toggleArp(self, value):
+    def toggle_arp(self, value):
         if value:
             self.btn_arp_enable.setText("Arp On")
-            self.shared_common["bpm"] = self.spn_bpm.value()
-            self.shared_common["steps"] = self.spn_steps.value()
-            self.shared_common["n_type"] = self.lst_n_type.currentData()
-            self.shared_common["n_mod"] = self.lst_n_mod.currentData()
-            self.arp.powerOn()
+            self.shared_COMMON["bpm"] = self.spn_bpm.value()
+            self.shared_COMMON["steps"] = self.spn_steps.value()
+            self.shared_COMMON["n_type"] = self.lst_n_type.currentData()
+            self.shared_COMMON["n_mod"] = self.lst_n_mod.currentData()
+            self.arpstepper.power_on()
         else:
             self.btn_arp_enable.setText("Arp Off")
-            self.arp.powerOff()
+            self.arpstepper.power_off()
 
-    def changeNoteSpeed(self):
-        self.shared_common["n_type"] = self.lst_n_type.currentData()
+    def change_note_speed(self):
+        self.shared_COMMON["n_type"] = self.lst_n_type.currentData()
 
-    def changeNoteModifier(self):
-        self.shared_common["n_mod"] = self.lst_n_mod.currentData()
+    def change_note_modifier(self):
+        self.shared_COMMON["n_mod"] = self.lst_n_mod.currentData()
 
-    def temp_toggleState(self, led):
-        pass
+    def get_cascade_notes(self, note):
+        chord = self.lst_chord.currentText()
+        new_indexes = CHORDS[chord]
+        current_index = NOTES_INDEX[note]
 
+        cascade = []
+        for index_mod in new_indexes:
+            try:
+                cascade.append(INDEX_NOTES[current_index + index_mod])
+            except KeyError:
+                pass
 
-class ArpStepper(qtc.QThread):
-
-    update_signal = qtc.pyqtSignal(bool)
-
-    def __init__(self, led, pitch, gates, common):
-        self.led = led
-        self.pitch = pitch
-        self.gates = gates
-        self.common = common
-        self.step_current = 0
-        self.step_last = 0
-        self.arpeggiate = False
-        super().__init__()
-
-    def run(self):
-        while self.arpeggiate:
-            start_time = qtc.QTime.currentTime()
-            beats = self.common["bpm"]
-            max_steps = self.common["steps"] - 1
-            n_type = self.common["n_type"]
-            n_mod = self.common["n_mod"]
-
-            self.led[self.step_last].setChecked(False)
-            self.led[self.step_current].setChecked(True)
-
-            self.step_last = self.step_current
-
-            if self.step_current < max_steps:
-                self.step_current += 1
-            else:
-                self.step_current = 0
-
-            elapsed = start_time.msecsTo(qtc.QTime.currentTime())
-            qtc.QThread.msleep(
-                max(0, int((((60000 / beats) * n_type) * n_mod) - elapsed))
-            )
-
-    def toggle(self):
-        self.go = not self.go
-
-    def powerOff(self):
-        self.arpeggiate = False
-        for index in self.led.keys():
-            self.led[index].setChecked(False)
-
-    def powerOn(self):
-        self.step_current = 0
-        self.step_last = 0
-        self.arpeggiate = True
-        self.start()
+        return cascade
 
 
 if __name__ == "__main__":
