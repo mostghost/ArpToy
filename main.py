@@ -10,7 +10,6 @@ from modules.sound_mod import soundObject
 from modules.arp_mod import arpObject
 
 import sys
-import json
 
 
 class MainWindow(qtw.QWidget):
@@ -42,14 +41,14 @@ class MainWindow(qtw.QWidget):
 
         self.connect_panel()
 
-        self.lst_n_type.setCurrentIndex(2)
+        self.lst_n_type.setCurrentIndex(4)
 
         self.arpstepper = arpObject(
             self.shared_LED,
             self.shared_PITCH,
             self.shared_GATES,
             self.shared_COMMON,
-            self.shared_PLAYING
+            self.shared_PLAYING,
         )
 
     def setup_panel_ui(self):
@@ -303,7 +302,10 @@ class MainWindow(qtw.QWidget):
             for cascade_key in flattened_cascade:
                 self.dict_keyboard[cascade_key].setDown(False)
 
-            del self.shared_PLAYING[note]
+            try:
+                del self.shared_PLAYING[note]
+            except KeyError:
+                pass
 
             self.dict_keyboard[note].setChecked(False)
 
@@ -424,6 +426,64 @@ class MainWindow(qtw.QWidget):
                 pass
 
         return cascade
+
+    def keyPressEvent(self, event):
+        if self.lst_control_type.currentText() == "Keybind":
+            match event.key():
+                case qtc.Qt.Key_Z:
+                    key = self.lo_keyboard.itemAtPosition(1, 0).widget()
+                case qtc.Qt.Key_S:
+                    key = self.lo_keyboard.itemAtPosition(0, 1).widget()
+                case qtc.Qt.Key_X:
+                    key = self.lo_keyboard.itemAtPosition(1, 2).widget()
+                case qtc.Qt.Key_D:
+                    key = self.lo_keyboard.itemAtPosition(0, 3).widget()
+                case qtc.Qt.Key_C:
+                    key = self.lo_keyboard.itemAtPosition(1, 4).widget()
+                case qtc.Qt.Key_V:
+                    key = self.lo_keyboard.itemAtPosition(1, 6).widget()
+                case qtc.Qt.Key_G:
+                    key = self.lo_keyboard.itemAtPosition(0, 7).widget()
+                case qtc.Qt.Key_B:
+                    key = self.lo_keyboard.itemAtPosition(1, 8).widget()
+                case qtc.Qt.Key_H:
+                    key = self.lo_keyboard.itemAtPosition(0, 9).widget()
+                case qtc.Qt.Key_N:
+                    key = self.lo_keyboard.itemAtPosition(1, 10).widget()
+                case qtc.Qt.Key_J:
+                    key = self.lo_keyboard.itemAtPosition(0, 11).widget()
+                case qtc.Qt.Key_M:
+                    key = self.lo_keyboard.itemAtPosition(1, 12).widget()
+
+                case qtc.Qt.Key_Q:
+                    key = self.lo_keyboard.itemAtPosition(1, 14).widget()
+                case qtc.Qt.Key_2:
+                    key = self.lo_keyboard.itemAtPosition(0, 15).widget()
+                case qtc.Qt.Key_W:
+                    key = self.lo_keyboard.itemAtPosition(1, 16).widget()
+                case qtc.Qt.Key_3:
+                    key = self.lo_keyboard.itemAtPosition(0, 17).widget()
+                case qtc.Qt.Key_E:
+                    key = self.lo_keyboard.itemAtPosition(1, 18).widget()
+                case qtc.Qt.Key_R:
+                    key = self.lo_keyboard.itemAtPosition(1, 20).widget()
+                case qtc.Qt.Key_5:
+                    key = self.lo_keyboard.itemAtPosition(0, 21).widget()
+                case qtc.Qt.Key_T:
+                    key = self.lo_keyboard.itemAtPosition(1, 22).widget()
+                case qtc.Qt.Key_6:
+                    key = self.lo_keyboard.itemAtPosition(0, 23).widget()
+                case qtc.Qt.Key_Y:
+                    key = self.lo_keyboard.itemAtPosition(1, 24).widget()
+                case qtc.Qt.Key_7:
+                    key = self.lo_keyboard.itemAtPosition(0, 25).widget()
+                case qtc.Qt.Key_U:
+                    key = self.lo_keyboard.itemAtPosition(1, 26).widget()
+
+            try:
+                key.animateClick()
+            except UnboundLocalError:
+                pass
 
 
 if __name__ == "__main__":
