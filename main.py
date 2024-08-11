@@ -8,6 +8,9 @@ from widgets.led import ledIndicator
 from widgets.keyslide import keySlide
 from modules.sound_mod import soundObject
 from modules.arp_mod import arpObject
+from widgets.NoFocusCombo import noFocusCombo
+from widgets.NoFocusSpin import noFocusSpin
+
 
 import sys
 
@@ -48,7 +51,7 @@ class MainWindow(qtw.QWidget):
             self.shared_PITCH,
             self.shared_GATES,
             self.shared_COMMON,
-            self.shared_PLAYING,
+            self.shared_PLAYING
         )
 
     def setup_panel_ui(self):
@@ -110,7 +113,7 @@ class MainWindow(qtw.QWidget):
 
         lbl_bpm = qtw.QLabel("BPM")
         lo_bpm_frame.addWidget(lbl_bpm)
-        self.spn_bpm = qtw.QSpinBox(maximum=260, minimum=40, value=110)
+        self.spn_bpm = noFocusSpin(maximum=260, minimum=40, value=110)
         lo_bpm_frame.addWidget(self.spn_bpm)
         self.spn_bpm.valueChanged.connect(self.change_bpm)
         self.btn_tap = qtw.QPushButton("Tap Tempo")
@@ -118,11 +121,11 @@ class MainWindow(qtw.QWidget):
 
         lo_panel_holder.addWidget(struct_bpm_frame)
 
-        self.lst_instrument = qtw.QComboBox()
+        self.lst_instrument = noFocusCombo()
         lo_panel.addWidget(self.lst_instrument)
-        self.lst_chord = qtw.QComboBox()
+        self.lst_chord = noFocusCombo()
         lo_panel.addWidget(self.lst_chord)
-        self.lst_control_type = qtw.QComboBox()
+        self.lst_control_type = noFocusCombo()
         lo_panel.addWidget(self.lst_control_type)
         self.lst_control_type.currentTextChanged.connect(self.change_key_control)
 
@@ -169,21 +172,21 @@ class MainWindow(qtw.QWidget):
         self.btn_latch = qtw.QPushButton("Latch", checkable=True)
         lo_arp_controls.addWidget(self.btn_latch)
 
-        self.lst_presets = qtw.QComboBox()
+        self.lst_presets = noFocusCombo()
         lo_arp_controls.addWidget(self.lst_presets)
 
-        self.lst_pattern = qtw.QComboBox()
+        self.lst_pattern = noFocusCombo()
         lo_arp_controls.addWidget(self.lst_pattern)
 
-        self.lst_n_type = qtw.QComboBox()
+        self.lst_n_type = noFocusCombo()
         lo_arp_controls.addWidget(self.lst_n_type)
         self.lst_n_type.currentIndexChanged.connect(self.change_note_speed)
 
-        self.lst_n_mod = qtw.QComboBox()
+        self.lst_n_mod = noFocusCombo()
         lo_arp_controls.addWidget(self.lst_n_mod)
         self.lst_n_mod.currentIndexChanged.connect(self.change_note_modifier)
 
-        self.spn_steps = qtw.QSpinBox(prefix="Steps: ", maximum=16, minimum=4, value=8)
+        self.spn_steps = noFocusSpin(prefix="Steps: ", maximum=16, minimum=4, value=8)
         lo_arp_controls.addWidget(self.spn_steps)
         self.spn_steps.valueChanged.connect(self.change_steps)
 
@@ -388,6 +391,7 @@ class MainWindow(qtw.QWidget):
 
         self.shared_COMMON["steps"] = num_of_steps
 
+
     def change_key_control(self, value):
         for key in self.dict_keyboard.keys():
             self.dict_keyboard[key].type = value
@@ -428,57 +432,57 @@ class MainWindow(qtw.QWidget):
         return cascade
 
     def keyPressEvent(self, event):
-        if self.lst_control_type.currentText() == "Keybind":
+        if self.lst_control_type.currentText() == 'Keybind':
             match event.key():
                 case qtc.Qt.Key_Z:
-                    key = self.lo_keyboard.itemAtPosition(1, 0).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,0).widget()
                 case qtc.Qt.Key_S:
-                    key = self.lo_keyboard.itemAtPosition(0, 1).widget()
+                    key = self.lo_keyboard.itemAtPosition(0,1).widget()
                 case qtc.Qt.Key_X:
-                    key = self.lo_keyboard.itemAtPosition(1, 2).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,2).widget()
                 case qtc.Qt.Key_D:
-                    key = self.lo_keyboard.itemAtPosition(0, 3).widget()
+                    key = self.lo_keyboard.itemAtPosition(0,3).widget()
                 case qtc.Qt.Key_C:
-                    key = self.lo_keyboard.itemAtPosition(1, 4).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,4).widget()
                 case qtc.Qt.Key_V:
-                    key = self.lo_keyboard.itemAtPosition(1, 6).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,6).widget()
                 case qtc.Qt.Key_G:
-                    key = self.lo_keyboard.itemAtPosition(0, 7).widget()
+                    key = self.lo_keyboard.itemAtPosition(0,7).widget()
                 case qtc.Qt.Key_B:
-                    key = self.lo_keyboard.itemAtPosition(1, 8).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,8).widget()
                 case qtc.Qt.Key_H:
-                    key = self.lo_keyboard.itemAtPosition(0, 9).widget()
+                    key = self.lo_keyboard.itemAtPosition(0,9).widget()
                 case qtc.Qt.Key_N:
-                    key = self.lo_keyboard.itemAtPosition(1, 10).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,10).widget()
                 case qtc.Qt.Key_J:
-                    key = self.lo_keyboard.itemAtPosition(0, 11).widget()
+                    key = self.lo_keyboard.itemAtPosition(0,11).widget()
                 case qtc.Qt.Key_M:
-                    key = self.lo_keyboard.itemAtPosition(1, 12).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,12).widget()
 
                 case qtc.Qt.Key_Q:
-                    key = self.lo_keyboard.itemAtPosition(1, 14).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,14).widget()
                 case qtc.Qt.Key_2:
-                    key = self.lo_keyboard.itemAtPosition(0, 15).widget()
+                    key = self.lo_keyboard.itemAtPosition(0,15).widget()
                 case qtc.Qt.Key_W:
-                    key = self.lo_keyboard.itemAtPosition(1, 16).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,16).widget()
                 case qtc.Qt.Key_3:
-                    key = self.lo_keyboard.itemAtPosition(0, 17).widget()
+                    key = self.lo_keyboard.itemAtPosition(0,17).widget()
                 case qtc.Qt.Key_E:
-                    key = self.lo_keyboard.itemAtPosition(1, 18).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,18).widget()
                 case qtc.Qt.Key_R:
-                    key = self.lo_keyboard.itemAtPosition(1, 20).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,20).widget()
                 case qtc.Qt.Key_5:
-                    key = self.lo_keyboard.itemAtPosition(0, 21).widget()
+                    key = self.lo_keyboard.itemAtPosition(0,21).widget()
                 case qtc.Qt.Key_T:
-                    key = self.lo_keyboard.itemAtPosition(1, 22).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,22).widget()
                 case qtc.Qt.Key_6:
-                    key = self.lo_keyboard.itemAtPosition(0, 23).widget()
+                    key = self.lo_keyboard.itemAtPosition(0,23).widget()
                 case qtc.Qt.Key_Y:
-                    key = self.lo_keyboard.itemAtPosition(1, 24).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,24).widget()
                 case qtc.Qt.Key_7:
-                    key = self.lo_keyboard.itemAtPosition(0, 25).widget()
+                    key = self.lo_keyboard.itemAtPosition(0,25).widget()
                 case qtc.Qt.Key_U:
-                    key = self.lo_keyboard.itemAtPosition(1, 26).widget()
+                    key = self.lo_keyboard.itemAtPosition(1,26).widget()
 
             try:
                 key.animateClick()
