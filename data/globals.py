@@ -1,3 +1,4 @@
+import os
 import json
 
 NOTES = ["C", "Cs", "D", "Ds", "E", "F", "Fs", "G", "Gs", "A", "As", "B"]
@@ -104,6 +105,9 @@ NOTES_INDEX = {
     "B4": 48,
 }
 
-with open('data/chords.json') as f:
+script_dir = os.path.dirname(os.path.realpath(__file__))
+json_file_path = os.path.join(script_dir, 'chords.json')
+
+with open(json_file_path) as f:
     CHORDS = json.load(f)
 
